@@ -82,6 +82,11 @@ async function commitAndPush(filePath: string, newVersion: string): Promise<void
     const branchName = context.payload.pull_request.head.ref;
     core.info(`Detected branch for PR: ${branchName}`);
 
+    // Fetch and rebase to integrate remote changes
+    core.info(`Fetching and rebasing ${branchName}...`);
+    await exec('git', ['fetch', 'origin', branchName]);
+    await exec('git', ['rebase', `origin/${branchName}`]);
+
     // Push changes to the detected branch
     core.info('Pushing changes...');
     await exec('git', ['push', 'origin', `HEAD:${branchName}`]);
