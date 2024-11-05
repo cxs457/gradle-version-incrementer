@@ -22,20 +22,31 @@ jobs:
   increment-version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Increment version
-        uses: sardul3/gradle-version-incrementer@v1
+     # To just add a reminder comment:
+      - uses: sardul3/gradle-version-incrementer@1.0.2
+
         with:
-          file-path: 'app/build.gradle'
-          increment-type: 'patch'  # or 'minor' or 'major'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file-path: 'build.gradle'
+          increment-type: 'patch'
+          mode: 'comment-only'
+    
+      # Or to actually update the file:
+      - uses: sardul3/gradle-version-incrementer@1.0.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file-path: 'build.gradle'
+          increment-type: 'patch'
+          mode: 'update-file'
 ```
 
 ## Inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `file-path` | Path to the gradle file | No | `app/build.gradle` |
-| `increment-type` | Type of increment | No | `patch` |
+| Input | Description                       | Required | Default |
+|-------|-----------------------------------|----------|---------|
+| `github-token` | already present for all workflows | Yes      | N/A     |
+| `file-path` | Path to the gradle file           | Yes      | N/A     |
+| `increment-type` | Type of increment                 | Yes      | N/A     |
 
 ## Outputs
 

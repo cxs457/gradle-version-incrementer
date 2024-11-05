@@ -1,14 +1,19 @@
 name: 'Gradle Version Incrementer'
 description: 'Automatically increments version in Gradle files with support for SNAPSHOT versions'
 inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
   file-path:
-    description: 'Path to the gradle file containing version'
-    required: false
-    default: 'app/build.gradle'
+    description: 'Path to the gradle file'
+    required: true
   increment-type:
-    description: 'Which version segment to increment (major, minor, patch)'
-    required: false
-    default: 'patch'
+    description: 'Type of version increment (major, minor, patch)'
+    required: true
+  mode:
+    description: 'Action mode (update-file or comment-only)'
+    required: true
+    default: 'comment-only'
 branding:
   icon: 'arrow-up'
   color: 'green'
