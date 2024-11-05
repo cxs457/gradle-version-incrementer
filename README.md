@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Increment version
-        uses: your-username/gradle-version-incrementer@v1
+        uses: sardul3/gradle-version-incrementer@v1
         with:
           file-path: 'app/build.gradle'
           increment-type: 'patch'  # or 'minor' or 'major'
