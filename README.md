@@ -22,8 +22,9 @@ jobs:
   increment-version:
     runs-on: ubuntu-latest
     steps:
-  # To just add a reminder comment:
+     # To just add a reminder comment:
       - uses: sardul3/gradle-version-incrementer@1.0.2
+
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file-path: 'build.gradle'
