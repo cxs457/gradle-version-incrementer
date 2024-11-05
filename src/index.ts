@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import * as fs from 'fs';
+import { Octokit } from "@octokit/rest";
 
 interface Version {
   major: number;
@@ -9,8 +10,16 @@ interface Version {
   suffix: string;
 }
 
+
+// Function to create an Octokit instance with a user-provided token
+function createOctokitInstance(userToken: any) {
+  return new Octokit({
+    auth: userToken, // Use the user-provided token
+  });
+}
+
 function parseVersion(version: string): Version {
-  core.debug(`Parsing version: ${version}`);
+  core.info(`Parsing version: ${version}`);
 
   let baseVersion = version;
   let suffix = '';
@@ -24,13 +33,13 @@ function parseVersion(version: string): Version {
   while (parts.length < 3) parts.push('0');
 
   const [major, minor, patch] = parts.map(p => parseInt(p, 10));
-  core.debug(`Parsed components - Major: ${major}, Minor: ${minor}, Patch: ${patch}, Suffix: ${suffix}`);
+  core.info(`Parsed components - Major: ${major}, Minor: ${minor}, Patch: ${patch}, Suffix: ${suffix}`);
 
   return { major, minor, patch, suffix };
 }
 
 function incrementVersion(version: Version, type: string): string {
-  core.debug(`Incrementing version: ${JSON.stringify(version)} with type: ${type}`);
+  core.info(`Incrementing version: ${JSON.stringify(version)} with type: ${type}`);
 
   let newVersion;
   switch (type.toLowerCase()) {
@@ -47,12 +56,12 @@ function incrementVersion(version: Version, type: string): string {
       throw new Error(`Invalid increment type: ${type}`);
   }
 
-  core.debug(`New version: ${newVersion}`);
+  core.info(`New version: ${newVersion}`);
   return newVersion;
 }
 
 async function addPRComment(newVersion: string): Promise<void> {
-  core.debug(`Preparing to add PR comment for version: ${newVersion}`);
+  core.info(`Preparing to add PR comment for version: ${newVersion}`);
 
   const token = core.getInput('github-token', { required: true });
   const octokit = github.getOctokit(token);
@@ -60,11 +69,11 @@ async function addPRComment(newVersion: string): Promise<void> {
 
   // Check if we are in a PR context
   if (!context.payload.pull_request) {
-    core.debug('Not in a pull request context - skipping PR comment');
+    core.info('Not in a pull request context - skipping PR comment');
     return;
   }
 
-  core.debug(`PR context found - Issue number: ${context.payload.pull_request.number}`);
+  core.info(`PR context found - Issue number: ${context.payload.pull_request.number}`);
 
   try {
     await octokit.rest.issues.createComment({
@@ -79,17 +88,17 @@ async function addPRComment(newVersion: string): Promise<void> {
 }
 
 async function updateGradleFile(filePath: string, newVersion: string): Promise<void> {
-  core.debug(`Reading gradle file at path: ${filePath}`);
+  core.info(`Reading gradle file at path: ${filePath}`);
 
   const content = fs.readFileSync(filePath, 'utf8');
-  core.debug(`Current file content: ${content}`);
+  core.info(`Current file content: ${content}`);
 
   const updatedContent = content.replace(
       /version\s*=\s*['"](.*?)['"]/,
       `version = "${newVersion}"`
   );
 
-  core.debug(`Updated file content: ${updatedContent}`);
+  core.info(`Updated file content: ${updatedContent}`);
   fs.writeFileSync(filePath, updatedContent, 'utf8');
   core.info(`Updated version in ${filePath} to ${newVersion}`);
 }
@@ -100,10 +109,10 @@ async function run(): Promise<void> {
     const incrementType = core.getInput('increment-type');
     const mode = core.getInput('mode', { required: true });
 
-    core.debug(`Inputs - File path: ${filePath}, Increment type: ${incrementType}, Mode: ${mode}`);
+    core.info(`Inputs - File path: ${filePath}, Increment type: ${incrementType}, Mode: ${mode}`);
 
     const content = fs.readFileSync(filePath, 'utf8');
-    core.debug(`Read gradle file content: ${content}`);
+    core.info(`Read gradle file content: ${content}`);
 
     const versionMatch = content.match(/version\s*=\s*['"](.*?)['"]/);
     if (!versionMatch) {
@@ -111,7 +120,7 @@ async function run(): Promise<void> {
     }
 
     const currentVersion = versionMatch[1];
-    core.debug(`Current version: ${currentVersion}`);
+    core.info(`Current version: ${currentVersion}`);
 
     const parsedVersion = parseVersion(currentVersion);
     const newVersion = incrementVersion(parsedVersion, incrementType);
