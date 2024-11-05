@@ -10,7 +10,8 @@ interface Version {
 }
 
 function parseVersion(version: string): Version {
-  // Split version into base version and suffix (if any)
+  core.debug(`Parsing version: ${version}`);
+
   let baseVersion = version;
   let suffix = '';
 
@@ -19,76 +20,91 @@ function parseVersion(version: string): Version {
     suffix = `-${suffix}`;
   }
 
-  // Parse version components
   const parts = baseVersion.split('.');
   while (parts.length < 3) parts.push('0');
 
   const [major, minor, patch] = parts.map(p => parseInt(p, 10));
+  core.debug(`Parsed components - Major: ${major}, Minor: ${minor}, Patch: ${patch}, Suffix: ${suffix}`);
 
   return { major, minor, patch, suffix };
 }
 
 function incrementVersion(version: Version, type: string): string {
+  core.debug(`Incrementing version: ${JSON.stringify(version)} with type: ${type}`);
+
+  let newVersion;
   switch (type.toLowerCase()) {
     case 'major':
-      return `${version.major + 1}.0.0${version.suffix}`;
+      newVersion = `${version.major + 1}.0.0${version.suffix}`;
+      break;
     case 'minor':
-      return `${version.major}.${version.minor + 1}.0${version.suffix}`;
+      newVersion = `${version.major}.${version.minor + 1}.0${version.suffix}`;
+      break;
     case 'patch':
-      return `${version.major}.${version.minor}.${version.patch + 1}${version.suffix}`;
+      newVersion = `${version.major}.${version.minor}.${version.patch + 1}${version.suffix}`;
+      break;
     default:
       throw new Error(`Invalid increment type: ${type}`);
   }
+
+  core.debug(`New version: ${newVersion}`);
+  return newVersion;
 }
 
 async function addPRComment(newVersion: string): Promise<void> {
+  core.debug(`Preparing to add PR comment for version: ${newVersion}`);
+
   const token = core.getInput('github-token', { required: true });
   const octokit = github.getOctokit(token);
   const context = github.context;
 
-  // Only proceed if we're in a PR context
+  // Check if we are in a PR context
   if (!context.payload.pull_request) {
     core.debug('Not in a pull request context - skipping PR comment');
     return;
   }
 
+  core.debug(`PR context found - Issue number: ${context.payload.pull_request.number}`);
+
   try {
-    // Add a comment to the PR with the version update information
     await octokit.rest.issues.createComment({
       ...context.repo,
       issue_number: context.payload.pull_request.number,
       body: `⚠️ Reminder: Version should be updated to \`${newVersion}\` in build.gradle`
     });
+    core.info('Successfully added PR comment');
   } catch (error) {
     core.warning(`Failed to add PR comment: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 async function updateGradleFile(filePath: string, newVersion: string): Promise<void> {
-  // Read the gradle file
-  const content = fs.readFileSync(filePath, 'utf8');
+  core.debug(`Reading gradle file at path: ${filePath}`);
 
-  // Update file content
+  const content = fs.readFileSync(filePath, 'utf8');
+  core.debug(`Current file content: ${content}`);
+
   const updatedContent = content.replace(
       /version\s*=\s*['"](.*?)['"]/,
       `version = "${newVersion}"`
   );
 
-  // Write back to file
+  core.debug(`Updated file content: ${updatedContent}`);
   fs.writeFileSync(filePath, updatedContent, 'utf8');
+  core.info(`Updated version in ${filePath} to ${newVersion}`);
 }
 
 async function run(): Promise<void> {
   try {
-    // Get inputs
     const filePath = core.getInput('file-path');
     const incrementType = core.getInput('increment-type');
-    const mode = core.getInput('mode', { required: true }); // 'update-file' or 'comment-only'
+    const mode = core.getInput('mode', { required: true });
 
-    // Read the gradle file
+    core.debug(`Inputs - File path: ${filePath}, Increment type: ${incrementType}, Mode: ${mode}`);
+
     const content = fs.readFileSync(filePath, 'utf8');
+    core.debug(`Read gradle file content: ${content}`);
 
-    // Extract current version
     const versionMatch = content.match(/version\s*=\s*['"](.*?)['"]/);
     if (!versionMatch) {
       throw new Error('Version not found in gradle file');
@@ -97,26 +113,19 @@ async function run(): Promise<void> {
     const currentVersion = versionMatch[1];
     core.debug(`Current version: ${currentVersion}`);
 
-    // Parse and increment version
     const parsedVersion = parseVersion(currentVersion);
     const newVersion = incrementVersion(parsedVersion, incrementType);
-    core.debug(`New version: ${newVersion}`);
 
-    // Based on mode, either update file or add comment
     if (mode === 'update-file') {
       await updateGradleFile(filePath, newVersion);
-      core.info(`Updated version in ${filePath} to ${newVersion}`);
     } else if (mode === 'comment-only') {
       await addPRComment(newVersion);
-      core.info(`Added reminder comment about version ${newVersion}`);
     } else {
       throw new Error(`Invalid mode: ${mode}. Must be either 'update-file' or 'comment-only'`);
     }
 
-    // Set outputs regardless of mode
     core.setOutput('previous-version', currentVersion);
     core.setOutput('new-version', newVersion);
-
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message);
