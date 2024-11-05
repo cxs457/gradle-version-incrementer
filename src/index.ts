@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import * as fs from 'fs';
+import { exec } from '@actions/exec';
 import { Octokit } from "@octokit/rest";
 
 interface Version {
@@ -8,14 +9,6 @@ interface Version {
   minor: number;
   patch: number;
   suffix: string;
-}
-
-
-// Function to create an Octokit instance with a user-provided token
-function createOctokitInstance(userToken: any) {
-  return new Octokit({
-    auth: userToken, // Use the user-provided token
-  });
 }
 
 function parseVersion(version: string): Version {
@@ -60,16 +53,49 @@ function incrementVersion(version: Version, type: string): string {
   return newVersion;
 }
 
+async function configureGit(): Promise<void> {
+  core.info('Configuring git credentials...');
+  await exec('git', ['config', '--global', 'user.name', 'GitHub Action']);
+  await exec('git', ['config', '--global', 'user.email', 'action@github.com']);
+}
+
+async function commitAndPush(filePath: string, newVersion: string): Promise<void> {
+  try {
+    core.info('Starting commit and push process...');
+
+    await configureGit();
+
+    // Add the file
+    core.info(`Adding ${filePath} to git...`);
+    await exec('git', ['add', filePath]);
+
+    // Commit changes
+    core.info('Committing changes...');
+    await exec('git', ['commit', '-m', `Increment version to ${newVersion}`]);
+
+    // Push changes
+    core.info('Pushing changes...');
+    await exec('git', ['push']);
+
+    core.info('Successfully committed and pushed version update');
+  } catch (error) {
+    core.error('Failed to commit and push changes:');
+    if (error instanceof Error) {
+      core.error(error.message);
+      throw error;
+    }
+    throw new Error('Failed to commit and push changes');
+  }
+}
+
 async function addPRComment(newVersion: string): Promise<void> {
   core.info('=== PR Comment Function Start ===');
 
   const token = core.getInput('github-token', { required: true });
-  core.info(`Token received: ${token ? 'Yes' : 'No'}`);
   if (!token) {
     throw new Error('No GitHub token provided');
   }
   core.info('GitHub token found');
-
 
   const octokit = github.getOctokit(token);
   const context = github.context;
@@ -101,15 +127,10 @@ async function addPRComment(newVersion: string): Promise<void> {
     if (error instanceof Error) {
       core.error(error.message);
       core.error(error.stack || 'No stack trace');
-    } else {
-      core.error('Unknown error type');
     }
-    throw error;  // Re-throw to ensure the action fails if comment creation fails
+    throw error;
   }
-
-  core.info('=== PR Comment Function End ===');
 }
-
 
 async function updateGradleFile(filePath: string, newVersion: string): Promise<void> {
   core.info(`Reading gradle file at path: ${filePath}`);
@@ -125,6 +146,9 @@ async function updateGradleFile(filePath: string, newVersion: string): Promise<v
   core.info(`Updated file content: ${updatedContent}`);
   fs.writeFileSync(filePath, updatedContent, 'utf8');
   core.info(`Updated version in ${filePath} to ${newVersion}`);
+
+  // Add commit and push after file update
+  await commitAndPush(filePath, newVersion);
 }
 
 async function run(): Promise<void> {
@@ -138,8 +162,6 @@ async function run(): Promise<void> {
     core.info(`Running with mode: ${mode}`);
     core.info(`File path: ${filePath}`);
     core.info(`Increment type: ${incrementType}`);
-
-    // Rest of your existing code for version parsing and incrementing...
 
     const content = fs.readFileSync(filePath, 'utf8');
     const versionMatch = content.match(/version\s*=\s*['"](.*?)['"]/);
