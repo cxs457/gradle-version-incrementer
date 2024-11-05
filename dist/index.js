@@ -30008,6 +30008,10 @@ function commitAndPush(filePath, newVersion) {
             }
             const branchName = context.payload.pull_request.head.ref;
             core.info(`Detected branch for PR: ${branchName}`);
+            // Fetch and rebase to integrate remote changes
+            core.info(`Fetching and rebasing ${branchName}...`);
+            yield (0, exec_1.exec)('git', ['fetch', 'origin', branchName]);
+            yield (0, exec_1.exec)('git', ['rebase', `origin/${branchName}`]);
             // Push changes to the detected branch
             core.info('Pushing changes...');
             yield (0, exec_1.exec)('git', ['push', 'origin', `HEAD:${branchName}`]);
