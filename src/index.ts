@@ -61,31 +61,55 @@ function incrementVersion(version: Version, type: string): string {
 }
 
 async function addPRComment(newVersion: string): Promise<void> {
-  core.info(`Preparing to add PR comment for version: ${newVersion}`);
+  core.info('=== PR Comment Function Start ===');
 
   const token = core.getInput('github-token', { required: true });
+  core.info(`Token received: ${token ? 'Yes' : 'No'}`);
+  if (!token) {
+    throw new Error('No GitHub token provided');
+  }
+  core.info('GitHub token found');
+
+
   const octokit = github.getOctokit(token);
   const context = github.context;
 
-  // Check if we are in a PR context
+  core.info('Context debug info:');
+  core.info(`Event name: ${context.eventName}`);
+  core.info(`Action: ${context.action}`);
+  core.info(`Repo: ${context.repo.owner}/${context.repo.repo}`);
+  core.info(`Payload has PR: ${!!context.payload.pull_request}`);
+
   if (!context.payload.pull_request) {
     core.info('Not in a pull request context - skipping PR comment');
     return;
   }
 
-  core.info(`PR context found - Issue number: ${context.payload.pull_request.number}`);
+  const prNumber = context.payload.pull_request.number;
+  core.info(`PR number: ${prNumber}`);
 
   try {
+    core.info('Attempting to create comment...');
     await octokit.rest.issues.createComment({
       ...context.repo,
-      issue_number: context.payload.pull_request.number,
+      issue_number: prNumber,
       body: `⚠️ Reminder: Version should be updated to \`${newVersion}\` in build.gradle`
     });
     core.info('Successfully added PR comment');
   } catch (error) {
-    core.warning(`Failed to add PR comment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    core.error('Failed to add PR comment:');
+    if (error instanceof Error) {
+      core.error(error.message);
+      core.error(error.stack || 'No stack trace');
+    } else {
+      core.error('Unknown error type');
+    }
+    throw error;  // Re-throw to ensure the action fails if comment creation fails
   }
+
+  core.info('=== PR Comment Function End ===');
 }
+
 
 async function updateGradleFile(filePath: string, newVersion: string): Promise<void> {
   core.info(`Reading gradle file at path: ${filePath}`);
@@ -105,29 +129,34 @@ async function updateGradleFile(filePath: string, newVersion: string): Promise<v
 
 async function run(): Promise<void> {
   try {
+    core.info('=== Action Start ===');
+
     const filePath = core.getInput('file-path');
     const incrementType = core.getInput('increment-type');
     const mode = core.getInput('mode', { required: true });
 
-    core.info(`Inputs - File path: ${filePath}, Increment type: ${incrementType}, Mode: ${mode}`);
+    core.info(`Running with mode: ${mode}`);
+    core.info(`File path: ${filePath}`);
+    core.info(`Increment type: ${incrementType}`);
+
+    // Rest of your existing code for version parsing and incrementing...
 
     const content = fs.readFileSync(filePath, 'utf8');
-    core.info(`Read gradle file content: ${content}`);
-
     const versionMatch = content.match(/version\s*=\s*['"](.*?)['"]/);
     if (!versionMatch) {
       throw new Error('Version not found in gradle file');
     }
 
     const currentVersion = versionMatch[1];
-    core.info(`Current version: ${currentVersion}`);
-
     const parsedVersion = parseVersion(currentVersion);
     const newVersion = incrementVersion(parsedVersion, incrementType);
 
+    core.info(`Mode check - current mode: ${mode}`);
     if (mode === 'update-file') {
+      core.info('Executing update-file mode');
       await updateGradleFile(filePath, newVersion);
     } else if (mode === 'comment-only') {
+      core.info('Executing comment-only mode');
       await addPRComment(newVersion);
     } else {
       throw new Error(`Invalid mode: ${mode}. Must be either 'update-file' or 'comment-only'`);
@@ -135,9 +164,12 @@ async function run(): Promise<void> {
 
     core.setOutput('previous-version', currentVersion);
     core.setOutput('new-version', newVersion);
+
+    core.info('=== Action End ===');
   } catch (error) {
     if (error instanceof Error) {
-      core.setFailed(error.message);
+      core.setFailed(`Action failed: ${error.message}`);
+      core.error(error.stack || 'No stack trace');
     } else {
       core.setFailed('An unknown error occurred');
     }

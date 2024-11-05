@@ -18,7 +18,8 @@
   "description": "",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@actions/github": "^6.0.0"
+    "@actions/github": "^6.0.0",
+    "@octokit/rest": "^21.0.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
