@@ -1,19 +1,26 @@
 name: 'Gradle Version Incrementer'
-description: 'Automatically increments version in Gradle files with support for SNAPSHOT versions'
+description: 'Automatically increments version in build.gradle files and optionally commits changes'
 inputs:
   github-token:
-    description: 'GitHub token for API access'
+    description: 'GitHub token for authentication'
     required: true
   file-path:
-    description: 'Path to the gradle file'
+    description: 'Path to the build.gradle file'
     required: true
+    default: 'build.gradle'
   increment-type:
     description: 'Type of version increment (major, minor, patch)'
     required: true
+    default: 'patch'
   mode:
-    description: 'Action mode (update-file or comment-only)'
+    description: 'Operation mode (update-file or comment-only)'
     required: true
     default: 'comment-only'
+outputs:
+  previous-version:
+    description: 'The previous version before incrementing'
+  new-version:
+    description: 'The new version after incrementing'
 branding:
   icon: 'arrow-up'
   color: 'green'
