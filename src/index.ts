@@ -73,9 +73,18 @@ async function commitAndPush(filePath: string, newVersion: string): Promise<void
     core.info('Committing changes...');
     await exec('git', ['commit', '-m', `Increment version to ${newVersion}`]);
 
-    // Push changes
+    // Detect branch from PR context
+    const context = github.context;
+    if (!context.payload.pull_request) {
+      throw new Error('Not in a pull request context - cannot detect branch');
+    }
+
+    const branchName = context.payload.pull_request.head.ref;
+    core.info(`Detected branch for PR: ${branchName}`);
+
+    // Push changes to the detected branch
     core.info('Pushing changes...');
-    await exec('git', ['push']);
+    await exec('git', ['push', 'origin', `HEAD:${branchName}`]);
 
     core.info('Successfully committed and pushed version update');
   } catch (error) {
