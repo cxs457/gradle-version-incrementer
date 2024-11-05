@@ -30001,9 +30001,16 @@ function commitAndPush(filePath, newVersion) {
             // Commit changes
             core.info('Committing changes...');
             yield (0, exec_1.exec)('git', ['commit', '-m', `Increment version to ${newVersion}`]);
-            // Push changes
+            // Detect branch from PR context
+            const context = github.context;
+            if (!context.payload.pull_request) {
+                throw new Error('Not in a pull request context - cannot detect branch');
+            }
+            const branchName = context.payload.pull_request.head.ref;
+            core.info(`Detected branch for PR: ${branchName}`);
+            // Push changes to the detected branch
             core.info('Pushing changes...');
-            yield (0, exec_1.exec)('git', ['push']);
+            yield (0, exec_1.exec)('git', ['push', 'origin', `HEAD:${branchName}`]);
             core.info('Successfully committed and pushed version update');
         }
         catch (error) {
