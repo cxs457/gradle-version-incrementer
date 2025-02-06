@@ -1,5 +1,5 @@
-name: 'Gradle Version Incrementer'
-description: 'Automatically increments version in build.gradle files and optionally commits changes'
+name: 'Gradle Properties Version Incrementer'
+description: 'Automatically increments version in *.properties files and optionally commits changes'
 inputs:
   github-token:
     description: 'GitHub token for authentication'
