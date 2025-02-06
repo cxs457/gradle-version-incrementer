@@ -2,7 +2,7 @@ Forked from [sardul3/gradle-version-incrementer](https://github.com/sardul3/grad
 
 # Gradle Properties Version Incrementer
 
-A GitHub Action to automatically increment version numbers in Gradle build files.
+A GitHub Action to automatically increment version numbers in *.properties build files.
 
 ## Features
 
