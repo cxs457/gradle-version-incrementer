@@ -2,7 +2,6 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import * as fs from "node:fs";
 import { exec } from "@actions/exec";
-import { Octokit } from "@octokit/rest";
 
 interface Version {
 	major: number;
