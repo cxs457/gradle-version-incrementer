@@ -2,6 +2,7 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import * as fs from "node:fs";
 import { exec } from "@actions/exec";
+import path from "node:path";
 
 interface Version {
 	major: number;
@@ -195,7 +196,7 @@ async function run(): Promise<void> {
 		core.info(`File path: ${filePath}`);
 		core.info(`Increment type: ${incrementType}`);
 
-		const content = fs.readFileSync(filePath, "utf8");
+		const content = fs.readFileSync(path.resolve(filePath), "utf8");
 		const versionNameMatch = content.match(/versionName\s*=\s*['"](.*?)['"]/);
 		const versionCodeMatch = content.match(/versionCode\s*=\s*\d{0,}/);
 
