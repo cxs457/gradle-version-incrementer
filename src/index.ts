@@ -72,6 +72,7 @@ async function configureGit(): Promise<void> {
 async function commitAndPush(
 	filePath: string,
 	newVersion: string,
+	newVersionCode: number,
 ): Promise<void> {
 	try {
 		core.info("Starting commit and push process...");
@@ -84,7 +85,11 @@ async function commitAndPush(
 
 		// Commit changes
 		core.info("Committing changes...");
-		await exec("git", ["commit", "-m", `Increment version to ${newVersion}`]);
+		await exec("git", [
+			"commit",
+			"-m",
+			`Increment version to ${newVersion} - ${newVersionCode}`,
+		]);
 
 		// Detect branch from PR context
 		const context = github.context;
@@ -183,7 +188,7 @@ async function updateGradleFile(
 	);
 
 	// Add commit and push after file update
-	await commitAndPush(filePath, newVersionName);
+	await commitAndPush(filePath, newVersionName, newVersionCode);
 }
 
 async function run(): Promise<void> {

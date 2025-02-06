@@ -23924,14 +23924,18 @@ async function configureGit() {
   await (0, import_exec.exec)("git", ["config", "--global", "user.name", "GitHub Action"]);
   await (0, import_exec.exec)("git", ["config", "--global", "user.email", "action@github.com"]);
 }
-async function commitAndPush(filePath, newVersion) {
+async function commitAndPush(filePath, newVersion, newVersionCode) {
   try {
     core.info("Starting commit and push process...");
     await configureGit();
     core.info(`Adding ${filePath} to git...`);
     await (0, import_exec.exec)("git", ["add", filePath]);
     core.info("Committing changes...");
-    await (0, import_exec.exec)("git", ["commit", "-m", `Increment version to ${newVersion}`]);
+    await (0, import_exec.exec)("git", [
+      "commit",
+      "-m",
+      `Increment version to ${newVersion} - ${newVersionCode}`
+    ]);
     const context2 = github.context;
     if (!context2.payload.pull_request) {
       throw new Error("Not in a pull request context - cannot detect branch");
@@ -24000,7 +24004,7 @@ async function updateGradleFile(filePath, newVersionName, newVersionCode) {
   core.info(
     `Updated version in ${filePath} to ${newVersionName} - ${newVersionCode}`
   );
-  await commitAndPush(filePath, newVersionName);
+  await commitAndPush(filePath, newVersionName, newVersionCode);
 }
 async function run() {
   try {
