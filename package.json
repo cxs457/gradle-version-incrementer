@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"main": "dist/index.js",
 	"scripts": {
-		"build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node --target=node16",
+		"build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node --target=node20",
 		"test": "jest",
 		"lint": "eslint src/**/*.ts"
 	},
