@@ -24009,12 +24009,10 @@ async function run() {
     core.info(`Running with mode: ${mode}`);
     core.info(`File path: ${filePath}`);
     core.info(`Increment type: ${incrementType}`);
+    const absolutePath = import_node_path.default.resolve(import_node_path.default.join(filePath));
     core.info(`Base directory is ${__dirname}`);
-    core.info(`Absolute directory is ${filePath}`);
-    const content = fs.readFileSync(
-      import_node_path.default.resolve(import_node_path.default.join(__dirname, filePath)),
-      "utf8"
-    );
+    core.info(`Absolute directory is ${absolutePath}`);
+    const content = fs.readFileSync(absolutePath, "utf8");
     const versionNameMatch = content.match(/versionName\s*=\s*['"](.*?)['"]/);
     const versionCodeMatch = content.match(/versionCode\s*=\s*\d{0,}/);
     if (!versionCodeMatch) {
