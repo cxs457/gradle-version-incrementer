@@ -23997,7 +23997,9 @@ async function updateGradleFile(filePath, newVersionName, newVersionCode) {
   ).replace(/versionCode\s*=\s*\d{0,}/, `versionCode = ${newVersionCode}`);
   core.info(`Updated file content: ${updatedContent}`);
   fs.writeFileSync(filePath, updatedContent, "utf8");
-  core.info(`Updated version in ${filePath} to ${newVersionName}`);
+  core.info(
+    `Updated version in ${filePath} to ${newVersionName} - ${newVersionCode}`
+  );
   await commitAndPush(filePath, newVersionName);
 }
 async function run() {
@@ -24010,11 +24012,9 @@ async function run() {
     core.info(`File path: ${filePath}`);
     core.info(`Increment type: ${incrementType}`);
     const absolutePath = import_node_path.default.resolve(import_node_path.default.join(filePath));
-    core.info(`Base directory is ${__dirname}`);
-    core.info(`Absolute directory is ${absolutePath}`);
     const content = fs.readFileSync(absolutePath, "utf8");
     const versionNameMatch = content.match(/versionName\s*=\s*['"](.*?)['"]/);
-    const versionCodeMatch = content.match(/versionCode\s*=\s*\d{0,}/);
+    const versionCodeMatch = content.match(/versionCode\s*=\s*(\d{0,})/);
     if (!versionCodeMatch) {
       throw new Error("Version code not found");
     }
