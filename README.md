@@ -1,6 +1,8 @@
-# Gradle Version Incrementer
+Forked from [sardul3/gradle-version-incrementer](https://github.com/sardul3/gradle-version-incrementer)
 
-A GitHub Action to automatically increment version numbers in Gradle build files.
+# Gradle Properties Version Incrementer
+
+A GitHub Action to automatically increment version numbers in *.properties build files.
 
 ## Features
 
@@ -23,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
      # To just add a reminder comment:
-      - uses: sardul3/gradle-version-incrementer@1.0.2
+      - uses: cxs457/gradle-version-incrementer@1.0.2
 
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -32,7 +34,7 @@ jobs:
           mode: 'comment-only'
     
       # Or to actually update the file:
-      - uses: sardul3/gradle-version-incrementer@1.0.2
+      - uses: cxs457/gradle-version-incrementer@1.0.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file-path: 'build.gradle'
