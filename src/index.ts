@@ -196,10 +196,7 @@ async function run(): Promise<void> {
 		core.info(`File path: ${filePath}`);
 		core.info(`Increment type: ${incrementType}`);
 
-		const filePathComplete = path.resolve(path.join(__dirname, filePath));
-		console.log({ filePathComplete });
-
-		const content = fs.readFileSync(filePathComplete, "utf8");
+		const content = fs.readFileSync(path.resolve(filePath), "utf8");
 		const versionNameMatch = content.match(/versionName\s*=\s*['"](.*?)['"]/);
 		const versionCodeMatch = content.match(/versionCode\s*=\s*\d{0,}/);
 
