@@ -23936,11 +23936,14 @@ async function commitAndPush(filePath, newVersion, newVersionCode) {
       "-m",
       `Increment version to ${newVersion} - ${newVersionCode}`
     ]);
-    const context2 = github.context;
-    if (!context2.payload.pull_request) {
-      throw new Error("Not in a pull request context - cannot detect branch");
+    let branchName = "";
+    if (github.context.eventName === "push") {
+      const pushPayload = github.context.payload;
+      branchName = pushPayload.ref;
     }
-    const branchName = context2.payload.pull_request.head.ref;
+    if (!branchName) {
+      throw new Error("Branch name is required");
+    }
     core.info(`Detected branch for PR: ${branchName}`);
     core.info("Pushing changes...");
     await (0, import_exec.exec)("git", ["push", "--force", "origin", `HEAD:${branchName}`]);
