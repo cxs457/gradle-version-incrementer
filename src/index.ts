@@ -93,11 +93,8 @@ async function commitAndPush(
 
 		// Detect branch from PR context
 		const context = github.context;
-		if (!context.payload.pull_request) {
-			throw new Error("Not in a pull request context - cannot detect branch");
-		}
 
-		const branchName = context.payload.pull_request.head.ref;
+		const branchName = context.ref;
 		core.info(`Detected branch for PR: ${branchName}`);
 
 		// Fetch and rebase to integrate remote changes
