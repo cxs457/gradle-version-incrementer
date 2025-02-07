@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
      # To just add a reminder comment:
-      - uses: cxs457/gradle-properties-version-incrementer@1.1.2
+      - uses: cxs457/gradle-properties-version-incrementer@last-release
 
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -34,7 +34,7 @@ jobs:
           mode: 'comment-only'
     
       # Or to actually update the file:
-      - uses: cxs457/gradle-properties-version-incrementer@1.1.2
+      - uses: cxs457/gradle-properties-version-incrementer@last-release
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file-path: 'build.gradle'
