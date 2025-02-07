@@ -3,6 +3,10 @@ import * as github from "@actions/github";
 import * as fs from "node:fs";
 import { exec } from "@actions/exec";
 import path from "node:path";
+import type {
+	PullRequest,
+	PushEvent,
+} from "@octokit/webhooks-definitions/schema";
 
 interface Version {
 	major: number;
@@ -91,13 +95,17 @@ async function commitAndPush(
 			`Increment version to ${newVersion} - ${newVersionCode}`,
 		]);
 
-		// Detect branch from PR context
-		const context = github.context;
-		if (!context.payload.pull_request) {
-			throw new Error("Not in a pull request context - cannot detect branch");
+		let branchName = "";
+
+		if (github.context.eventName === "push") {
+			const pushPayload = github.context.payload as PushEvent;
+			branchName = pushPayload.ref;
 		}
 
-		const branchName = context.payload.pull_request.head.ref;
+		if (!branchName) {
+			throw new Error("Branch name is required");
+		}
+
 		core.info(`Detected branch for PR: ${branchName}`);
 
 		// Fetch and rebase to integrate remote changes
