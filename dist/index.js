@@ -23934,7 +23934,7 @@ async function commitAndPush(filePath, newVersion, newVersionCode) {
     await (0, import_exec.exec)("git", [
       "commit",
       "-m",
-      `Increment version to ${newVersion} - ${newVersionCode}`
+      `[skip ci] Increment version to ${newVersion} - ${newVersionCode}`
     ]);
     let branchName = github.context.ref || github.context.payload?.ref || github.context.payload?.head?.ref;
     if (!branchName) {

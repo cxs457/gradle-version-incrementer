@@ -29,7 +29,7 @@ jobs:
 
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file-path: 'build.gradle'
+          file-path: 'version.properties'
           increment-type: 'patch'
           mode: 'comment-only'
     
@@ -37,7 +37,7 @@ jobs:
       - uses: cxs457/gradle-properties-version-incrementer@last-release
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file-path: 'build.gradle'
+          file-path: 'version.properties'
           increment-type: 'patch'
           mode: 'update-file'
 ```

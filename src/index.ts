@@ -90,7 +90,7 @@ async function commitAndPush(
     await exec("git", [
       "commit",
       "-m",
-      `Increment version to ${newVersion} - ${newVersionCode}`,
+      `[skip ci] Increment version to ${newVersion} - ${newVersionCode}`,
     ]);
 
     let branchName =
