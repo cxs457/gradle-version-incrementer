@@ -23874,9 +23874,9 @@ var require_github = __commonJS({
 
 // src/index.ts
 var core = __toESM(require_core());
+var import_exec = __toESM(require_exec());
 var github = __toESM(require_github());
 var fs = __toESM(require("node:fs"));
-var import_exec = __toESM(require_exec());
 var import_node_path = __toESM(require("node:path"));
 function parseVersion(version) {
   core.info(`Parsing version: ${version}`);
@@ -23936,11 +23936,7 @@ async function commitAndPush(filePath, newVersion, newVersionCode) {
       "-m",
       `Increment version to ${newVersion} - ${newVersionCode}`
     ]);
-    let branchName = "";
-    if (github.context.eventName === "push") {
-      const pushPayload = github.context.payload;
-      branchName = pushPayload.ref;
-    }
+    let branchName = github.context.ref || github.context.payload?.ref || github.context.payload?.head?.ref;
     if (!branchName) {
       throw new Error("Branch name is required");
     }
