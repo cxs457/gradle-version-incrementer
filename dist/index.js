@@ -24004,6 +24004,8 @@ async function updateGradleFile(filePath, newVersionName, newVersionCode) {
     `Updated version in ${filePath} to ${newVersionName} - ${newVersionCode}`
   );
   await commitAndPush(filePath, newVersionName, newVersionCode);
+  core.setOutput("versionName", newVersionName);
+  core.setOutput("versionCode", newVersionCode);
 }
 async function run() {
   try {

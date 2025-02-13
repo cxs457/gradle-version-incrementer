@@ -193,6 +193,9 @@ async function updateGradleFile(
 
   // Add commit and push after file update
   await commitAndPush(filePath, newVersionName, newVersionCode);
+
+  core.setOutput("versionName", newVersionName);
+  core.setOutput("versionCode", newVersionCode);
 }
 
 async function run(): Promise<void> {
